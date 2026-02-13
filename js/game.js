@@ -353,6 +353,11 @@ function gameLoop(diff) {
 	}
 	addTime(diff)
 	player.points = player.points.add(tmp.pointGen.times(diff)).max(0)
+	//Those things are not the core script!!!
+	player.w.potential = player.w.potential.add(getPotentialGain().times(diff))
+	player.H.clouds = player.H.clouds.add(cloudGain().times(diff).times(cloud_x())).max(0)
+
+	//
 
 	for (let x = 0; x <= maxRow; x++){
 		for (item in TREE_LAYERS[x]) {

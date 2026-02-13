@@ -38,15 +38,16 @@ function egg(n) {
   if(n == undefined) return 0
   return n
 }
-function format(decimal, precision = 2, small=false) {
+function format(decimal, precision = 3, small=false) {
     small = small || modInfo.allowSmall
     decimal = new ExpantaNum(decimal)
-    let fmt = decimal.toString()
-    if(decimal.eq(0))return "0"
+  let fmt = decimal.toString()
+  if (decimal.lt(0)) return `-${format(decimal.times(-1),precision,small)}`
+  if (decimal.eq(0)) return "0"
     if(decimal.lt("0.0001")){return format(decimal.rec(), precision) + "⁻¹"}
   else if(decimal.lt(1)){
     if(small)precision+=2
-    if(fmt.length<precision+2){fmt+="0".repeat(precision-fmt.length+2)}
+      if (fmt.length < precision + 2) { fmt += "0".repeat(precision - fmt.length + 2)}
     else{fmt = fmt.substring(0,precision+2)}
     }
   else if(decimal.lt(1000)){
@@ -62,9 +63,9 @@ function format(decimal, precision = 2, small=false) {
     else{
       return f[0]+"."+f[1].substring(0,precision)
     }
-  }else if(decimal.lt(1e9)){
+  }else if(decimal.lt(1e12)){
     return commaFormat(decimal,precision)
-  }else if(decimal.lt("e10000")){
+  }else if(decimal.lt("e1000000")){
     let mantissa = EN(10).pow(decimal.log10().sub(decimal.log10().floor()))
     let exp = decimal.log10().floor()
     let m = mantissa.toString().split(".")
@@ -74,44 +75,25 @@ function format(decimal, precision = 2, small=false) {
     }
     else if(precision==0){mantissa = m[0]+"."+m[1].substring(0,2)}
     else mantissa = m[0]+"."+m[1].substring(0,precision)
-    return mantissa+"e"+exp.toString()
+    return mantissa+"e"+commaFormat(exp.floor(),precision)
   }
-  else if(decimal.lt("10^^5")){
-    let part1 = "e".repeat(egg(decimal.array[1])+1 - (decimal.gte(EN.E_MAX_SAFE_INTEGER)))
-    if(part1 != "e") {
-      decimal.array.pop()
-      return part1+format(decimal)
-    }
-    return "e"+format(decimal.log10())
+  else if(decimal.lt("10^^6")){
+    return "e"+format(decimal.log10(),precision,small)
   }
-  else if(decimal.lt("10^^^5")){
+  else if(decimal.lt("10^^^6")){
     let part1 = "F".repeat(egg(decimal.array[2])+1 - (decimal.gte(EN.TETRATED_MAX_SAFE_INTEGER)))
     if(part1 != "F") 
     {
       decimal.array.pop()
       return part1+format(decimal)
-    }
-    return "F"+format(decimal.slog())
+      }
+      if (decimal.lt("10^^10000")) {
+        return format(ExpantaNum(10).pow(decimal.slog().mod(1)),precision+3,small) + "F" + commaFormat(decimal.slog().floor(),0)
+      } else {
+        return "F" + format(decimal.slog())
+      }
   }
   else {
-    if(decimal.lt("10^^^^5")){
-      //console.log(egg(decimal.array[3]))
-      // Hmmmmmm
-      let part1 = "G".repeat(egg(decimal.array[3])+ 1 - (decimal.gte("10^^^"+Number.MAX_SAFE_INTEGER)))
-      if(part1 != "G") {
-        decimal.array.pop()
-        return part1+format(decimal)
-      }
-      return "G" + format(decimal.hlog(3))
-    }
-    else if(decimal.lt("10{5}5")){
-      let part1 = "H".repeat(egg(decimal.array[4])+1 - (decimal.gte("10^^^^"+Number.MAX_SAFE_INTEGER)))
-      if(part1 != "H") {
-        decimal.array.pop()
-        return part1+format(decimal)
-      }
-      return "H" + format(decimal.hlog(4))
-    }
     let e= decimal.toHyperE()
     let sp = e.split("#")
     sp[0]="E10"

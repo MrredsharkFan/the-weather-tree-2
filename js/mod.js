@@ -1,6 +1,6 @@
 let modInfo = {
 	name: "The Modding Tree",
-	id: "mymod",
+	id: "twt2",
 	author: "",
 	pointsName: "points",
 	discordName: "",
@@ -42,6 +42,8 @@ function getPointGen() {
 		return new ExpantaNum(0)
 
 	let gain = new ExpantaNum(1)
+	if (hasUpgrade("w", 12)) { gain = gain.times(upgradeEffect("w", 12)) }
+	if (hasUpgrade("H",13)){gain = gain.times(upgradeEffect("H",13))}
 	return gain
 }
 
@@ -70,4 +72,32 @@ function maxTickLength() {
 // Use this if you need to undo inflation from an older version. If the version is older than the version that fixed the issue,
 // you can cap their current resources with this.
 function fixOldSave(oldVersion){
+}
+
+function pesudo_random(seed) {
+	return (Math.tan(Math.sin(seed*10600)*12040)*7777)%1
+}
+
+//wind
+function getWindSpeed() {
+	b = player.w.points.add(1).slog().times(2)
+	b = b.times(player.H.points.add(1).slog().times(0.5).add(1))
+	return b
+}
+
+function getPotentialGain() {
+	g = player.w.points
+	if (hasUpgrade("H",11)){g=g.times(upgradeEffect("H",11))}
+	return g
+}
+
+//water
+function cloudGain() {
+	g = new ExpantaNum(1)
+	if (hasUpgrade("H",14)){g = g.times(upgradeEffect("H",14))}
+	return g
+}
+
+function cloud_x() {
+	return Math.sign(pesudo_random(Math.floor(Date.now()/5000)*3.2439184)-0.5)
 }
