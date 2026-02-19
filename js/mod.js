@@ -43,7 +43,8 @@ function getPointGen() {
 
 	let gain = new ExpantaNum(1)
 	if (hasUpgrade("w", 12)) { gain = gain.times(upgradeEffect("w", 12)) }
-	if (hasUpgrade("H",13)){gain = gain.times(upgradeEffect("H",13))}
+	if (hasUpgrade("H", 13)) { gain = gain.times(upgradeEffect("H", 13)) }
+	if (hasUpgrade("H",22)){gain = gain.times(upgradeEffect("H",22))}
 	return gain
 }
 
@@ -53,6 +54,7 @@ function addedPlayerData() { return {
 
 // Display extra things at the top of the page
 var displayThings = [
+	`Offline progress is <span style="color: #ff0000">disabled</span>. Tick rate is ALWAYS set at 50ms.`
 ]
 
 // Determines when the game "ends"
@@ -66,7 +68,7 @@ function isEndgame() {
 
 // You can change this if you have things that can be messed up by long tick lengths
 function maxTickLength() {
-	return(3600) // Default is 1 hour which is just arbitrarily large
+	return(0.05) // Default is 1 hour which is just arbitrarily large
 }
 
 // Use this if you need to undo inflation from an older version. If the version is older than the version that fixed the issue,
@@ -82,6 +84,7 @@ function pesudo_random(seed) {
 function getWindSpeed() {
 	b = player.w.points.add(1).slog().times(2)
 	b = b.times(player.H.points.add(1).slog().times(0.5).add(1))
+	if (hasUpgrade("H",23)){b = b.add(upgradeEffect("H",23))}
 	return b
 }
 
@@ -94,10 +97,16 @@ function getPotentialGain() {
 //water
 function cloudGain() {
 	g = new ExpantaNum(1)
-	if (hasUpgrade("H",14)){g = g.times(upgradeEffect("H",14))}
+	if (hasUpgrade("H", 14)) { g = g.times(upgradeEffect("H", 14)) }
+	if (hasUpgrade("H",31)){g = g.times(2)}
 	return g
 }
 
 function cloud_x() {
-	return Math.sign(pesudo_random(Math.floor(Date.now()/5000)*3.2439184)-0.5)
+	period = hasUpgrade("H",31)?2500:5000
+	return Math.sign(pesudo_random(Math.floor(Date.now()/period)*3.2439184)-0.5)
+}
+
+function rainGain() {
+	return player.H.clouds.slog().pow(0.5).sub(1).max(0)
 }

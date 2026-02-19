@@ -356,6 +356,7 @@ function gameLoop(diff) {
 	//Those things are not the core script!!!
 	player.w.potential = player.w.potential.add(getPotentialGain().times(diff))
 	player.H.clouds = player.H.clouds.add(cloudGain().times(diff).times(cloud_x())).max(0)
+	player.H.rain = player.H.rain.add(rainGain().times(diff))
 
 	//
 
