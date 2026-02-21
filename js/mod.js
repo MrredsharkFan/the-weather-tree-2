@@ -123,11 +123,16 @@ function rainGain() {
 	if (hasUpgrade("H", 35)) { e = e.times(fertEffect(player.H.fert)) }
 	if (hasUpgrade("A", 21)) { e = e.times(1.5) }
 	if (hasUpgrade("H", 41)) { e = e.times(upgradeEffect("H", 41)) }
+	if (e.gte(30)) {
+		e = e.div(30).add(1).slog().times(5).add(25)
+	}
 	return e
 }
 
 function baseQual(x) {
-	return x.div(100000).add(1).log10().add(1).pow(2)
+	t = x.div(100000).add(1).log10().add(1).pow(2)
+	if (hasUpgrade("A",13)){t = t.times(upgradeEffect("A",13))}
+	return t
 }
 
 function fertEffect(x) {
@@ -164,5 +169,29 @@ function awarenessText() {
 
 function moneyGain() {
 	t = awarenessGain()[4]
-	return t.add(100).pow(0.5).sub(10).div(100)
+	t = t.add(100).pow(0.5).sub(10).div(100)
+	if (t.gte(10)) { t = t.log10().pow(2).times(10).add(1) }
+	if (hasUpgrade("A",24)){t = t.times(upgradeEffect("A",24))}
+	return t
+}
+
+//money
+function toolLevel(x, base) {
+	base = new OmegaNum(base)
+	k = [x.add(1).log10().div(base.log10())]
+	k = k.concat(k[0].floor())
+	k = k.concat(new OmegaNum.pow(base, k[1].add(1)))
+	k = k.concat(x.div(k[2]).times(100))
+	k = k.concat(x)
+	return k
+}
+
+function heatToolText() {
+	m = [toolLevel(player.T.heater, 4), toolLevel(player.T.cooler, 4)]
+	return `You have heater level ${format(m[0][1])}, ${format(m[0][4])}/${format(m[0][2])}(${format(m[0][3])}%)$.<br>You have cooler level ${format(m[1][1])}, ${format(m[1][4])}/${format(m[1][2])}(${format(m[1][3])}%)$.`
+}
+
+function heatToolEffect() {
+	m = [toolLevel(player.T.heater, 4), toolLevel(player.T.cooler, 4)]
+	return [new ExpantaNum.pow(3,m[0][1].sub(1).pow(1.5)),new ExpantaNum.pow(3,m[1][1].sub(1).pow(1.5))]
 }

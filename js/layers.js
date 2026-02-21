@@ -373,19 +373,36 @@ addLayer("T", {
             unlocked: false,
             points: new ExpantaNum(0),
             heat: new ExpantaNum(0),
-            cold: new ExpantaNum(0)
+            cold: new ExpantaNum(0),
+            heater: new ExpantaNum(0),
+            cooler: new ExpantaNum(0),
         }
     },
-    tabFormat: [
-        "main-display",
-        "prestige-button",
-        ["clickables", 1],
-        ["raw-html", "<br><hr><br>"],
-        ["upgrades","123"],
-        ["raw-html","<hr>"],
-        ["display-text", function () { return `Your <b>${format(player.T.heat)}</b> heat &rarr; ${format(getTempVariance(player.T.heat).add(25))} degrees.<br>Your <b>${format(player.T.cold)}</b> cold &rarr; ${format(getTempVariance(player.T.cold).times(-1).add(25))} degrees.` }],
-        ["display-text", function(){return `This generates an extra wind of +${format(tempWind())}km/h.`}]
-    ],
+    tabFormat: {
+        "Main": {
+            content:[
+            "main-display",
+            "prestige-button",
+            ["clickables", 1],
+            ["raw-html", "<br><hr><br>"],
+            ["upgrades", "123"],
+            ["raw-html", "<hr>"],
+            ["display-text", function () { return `Your <b>${format(player.T.heat)}</b> heat &rarr; ${format(getTempVariance(player.T.heat).add(25))} degrees.<br>Your <b>${format(player.T.cold)}</b> cold &rarr; ${format(getTempVariance(player.T.cold).times(-1).add(25))} degrees.` }],
+            ["display-text", function () { return `This generates an extra wind of +${format(tempWind())}km/h.` }]
+            ]
+        },
+        "Tools": {
+            unlocked() { return hasUpgrade("A", 23) },
+            content: [
+                "main-display",
+                "prestige-button",
+                ["display-text", function () { return `<hr>You have ${format(player.A.money)}$.<hr>${heatToolText()}` }],
+                ["clickables", "2"],
+                ["raw-html", "<br><hr>"],
+                ["display-text", function () { return `x${format(heatToolEffect()[0])} heat<br>x${format(heatToolEffect()[1])} cold` }]
+            ]
+        }
+},
     onPrestige() {
         player.w.points = new ExpantaNum(0)
     },
@@ -396,6 +413,7 @@ addLayer("T", {
                 x = player.T.points
                 if (hasUpgrade("T", 21)) { x = x.times(upgradeEffect("T", 21)) }
                 if (hasUpgrade("A", 12)) { x = x.times(upgradeEffect("A", 12)) }
+                if (hasUpgrade("A", 23)) { x = x.times(heatToolEffect()[0]) }
                 player.T.heat = player.T.heat.add(x)
                 player.T.points = new ExpantaNum(0)
             },
@@ -406,12 +424,31 @@ addLayer("T", {
             onClick() {
                 x = player.T.points
                 if (hasUpgrade("H", 25)) { x = x.times(upgradeEffect("H", 25)) }
-                if (hasUpgrade("H",34)){x = x.times(upgradeEffect("H",34))}
+                if (hasUpgrade("H", 34)) { x = x.times(upgradeEffect("H", 34)) }
+                if (hasUpgrade("A", 22)) { x = x.times(heatToolEffect()[1]) }
                 player.T.cold = player.T.cold.add(x)
                 player.T.points = new ExpantaNum(0)
             },
             canClick() { return player.T.points.gte(1) }
         },
+        21: {
+            display: "Invest all your money into heating!",
+            onClick() {
+                x = player.A.money
+                player.T.heater = player.T.heater.add(x)
+                player.A.money = new ExpantaNum(0)
+            },
+            canClick() { return player.T.points.gte(1) }
+        },
+        22: {
+            display: "Invest all your money into cooling!",
+            onClick() {
+                x = player.A.money
+                player.T.cooler = player.T.cooler.add(x)
+                player.A.money = new ExpantaNum(0)
+            },
+            canClick() { return player.T.points.gte(1) }
+        }
     },
     upgrades: {
         11: {
@@ -512,6 +549,13 @@ addLayer("A", {
             effect() { return player.A.points.add(1).tetrate(1.01).div(10).sub(1) },
             effectDisplay(){return `x${format(this.effect())}`}
         },
+        13: {
+            title: "Research",
+            cost: new OmegaNum(1e9),
+            description: "Tony: Let's do some... Non-standard research... On how to make more rain!<hr>Awareness improves the base quality for fertilizers.",
+            effect() { return player.A.points.div(1e9).add(1).log10().add(1).pow(0.875) },
+            effectDisplay() { return `*${format(this.effect())}` }
+        },
         21: {
             fullDisplay() { return `<h3>Borrow a generator</h3><br>Tony: Well, since you're so into doing this...<hr>x1.5 rain rate.<br><br>Cost: 0.05$` },
             canAfford() { return player.A.money.gte(0.05) },
@@ -522,6 +566,17 @@ addLayer("A", {
             canAfford() { return player.A.money.gte(0.25) },
             pay() { player.A.money = player.A.money.sub(0.25) },
             style: {"height": "200px"}
+        },
+        23: {
+            fullDisplay() { return `<h3>Heater/Cooler</h3><br>Dawn: Well... We do sell everything here. Notice why my room is always covered in ic-<hr>Unlock Air conditioners/Heaters.<br><br>Cost: 500$` },
+            canAfford() { return player.A.money.gte(500) },
+            pay() { player.A.money = player.A.money.sub(500) },
+        },
+        24: {
+            fullDisplay() { return `<h3>Influencer</h3><br>Saturday: Hi? Dawn's occupied today. I'm the replacement shopkeeper. Want to get a mic for streaming rain ASMR videos?<hr>Rain boosts money. (Post-softcap)<br><br>Cost: 2,000$<hr>Currently: x${format(this.effect())}` },
+            canAfford() { return player.A.money.gte(2000) },
+            pay() { player.A.money = player.A.money.sub(2000) },
+            effect(){return rainGain().sub(19).max(1).tetrate(1.05)}
         }
     }
 })

@@ -8,7 +8,7 @@ function standard(n) {
     return A[n]
   }
   else if (n.lt(1000)) {
-    return B1[n.mod(10)]+B2[n.div(10).floor().mod(10)]+B3[n.div(100).floor().mod(10)]
+    return B1[n.sub(1).mod(10)]+B2[n.sub(1).div(10).floor().mod(10)]+B3[n.sub(1).div(100).floor().mod(10)]
   }
   else {
     return "No shit sherlock"
