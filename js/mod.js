@@ -89,6 +89,7 @@ function getWindSpeed() {
 	if (player.T.total.gte(1)) { b = b.add(tempWind()) }
 	if (hasUpgrade("w", 23)) { b = b.add(upgradeEffect("w", 23)) }
 	if (hasUpgrade("H", 15)) { b = b.add(upgradeEffect("H", 15)) }
+	if (hasUpgrade("A", 22)) { b = b.add(3) }
 	return b
 }
 
@@ -120,6 +121,8 @@ function rainGain() {
 	e = player.H.clouds.slog().pow(0.5).sub(1).max(0)
 	if (hasUpgrade("H", 24)) { e = e.times(upgradeEffect("H", 24)) }
 	if (hasUpgrade("H", 35)) { e = e.times(fertEffect(player.H.fert)) }
+	if (hasUpgrade("A", 21)) { e = e.times(1.5) }
+	if (hasUpgrade("H", 41)) { e = e.times(upgradeEffect("H", 41)) }
 	return e
 }
 
@@ -140,4 +143,26 @@ function getTempVariance(val) {
 
 function tempWind() {
 	return getTempVariance(player.T.heat).add(getTempVariance(player.T.cold)).pow(0.75)
+}
+
+//awareness
+function awarenessGain() {
+	r = [rainGain().sub(10).div(2.5).max(0).add(1).tetrate(2).sub(1), getWindSpeed().sub(30).max(0).add(1).tetrate(1.8).sub(1), getTempVariance(player.T.heat).sub(8).max(0).add(1).tetrate(2).sub(1), getTempVariance(player.T.cold).sub(5).max(0).add(1).tetrate(1.9).sub(1)]
+	return r.concat(r[0].add(1).times(r[1].add(1)).times(r[2].add(1)).times(r[3].add(1)))
+}
+
+function awarenessText() {
+	l = awarenessGain()
+	d = ""
+	f = [format(rainGain()), format(getWindSpeed()), format(getTempVariance(player.T.heat).add(25)), format(getTempVariance(player.T.cold).times(-1).add(25))]
+	for (i = 0; i < l.length-1; i++){
+		d = d+ `${f[i]} ${["mm/h [starts at 10mm/h]", "km/h [starts at 30km/h]", "*C [starts at 33*C]", "*C [starts at 20*C]"][i]} -> ${format(l[i])} factor <span style="color:#dd00${i*11+55}">${i+1}</span><br>`
+	}
+	d = d+`<hr>This equates to an awareness of ${format(l[4])}`
+	return d
+}
+
+function moneyGain() {
+	t = awarenessGain()[4]
+	return t.add(100).pow(0.5).sub(10).div(100)
 }

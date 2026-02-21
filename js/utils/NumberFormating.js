@@ -1,11 +1,11 @@
 function standard(n) {
   n = n.floor()
-  A = ["K", "M", "B", "T", "Qa", "Qi", "Sx", "Sp", "Oc", "No"]
+  A = ["","K", "M", "B", "T", "Qa", "Qi", "Sx", "Sp", "Oc", "No"]
   B1 = ["", "U", "D", "T", "Qa", "Qi", "Sx", "Sp", "Oc", "No"]
   B2 = ["", "Dc", "Vg", "Tg", "Qag", "Qig", "Sxg", "Spg", "Ocg", "Nog"]
   B3 = ["","Ce", "Du", "Tc", "Qac", "Qic", "Sxc", "Spc", "Occ", "Noc"]
-  if (n.lt(10)) {
-    return A[n-1]
+  if (n.lt(11)) {
+    return A[n]
   }
   else if (n.lt(1000)) {
     return B1[n.mod(10)]+B2[n.div(10).floor().mod(10)]+B3[n.div(100).floor().mod(10)]
@@ -76,22 +76,11 @@ function format(decimal, precision = 3, small=false) {
     else{fmt = fmt.substring(0,precision+2)}
     }
   else if(decimal.lt(1000)){
-    let f=fmt.split(".")
-    if(precision==0){
-      return format(decimal.floor())}
-    else if(f.length==1){
-      return fmt+".00"
-    }
-    else if(f[1].length<precision){
-      return fmt+"0".repeat(precision-f[1].length)
-    }
-    else{
-      return f[0]+"."+f[1].substring(0,precision)
-    }
-  }else if(decimal.lt(1e15)){
+      return decimal.toFixed(precision)
+    } else if (decimal.lt(1e15)) {
       return commaFormat(decimal, precision)
     } else if (decimal.lt("e3003")) {
-      return format(new ExpantaNum(10).pow(decimal.log10().mod(3)),precision)+standard(decimal.log10().div(3))
+      return format(new ExpantaNum(10).pow(decimal.log10().mod(3)),3)+standard(decimal.log10().div(3))
     }
     else if (decimal.lt("e1000000")) {
     let mantissa = EN(10).pow(decimal.log10().sub(decimal.log10().floor()))

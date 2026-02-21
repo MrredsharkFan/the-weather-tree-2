@@ -357,6 +357,8 @@ function gameLoop(diff) {
 	player.w.potential = player.w.potential.add(getPotentialGain().times(diff))
 	player.H.clouds = player.H.clouds.add(cloudGain().times(diff).times(cloud_x())).max(0)
 	player.H.rain = player.H.rain.add(rainGain().times(diff))
+	player.A.points = awarenessGain()[4]
+	if (hasUpgrade("A", 11)) { player.A.money = player.A.money.add(moneyGain().times(diff)) }
 
 	//
 

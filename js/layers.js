@@ -190,7 +190,7 @@ addLayer("H", {
     tabFormat: {
         "Main": {
             content: [
-                "main-display", "prestige-button", ["upgrades", "123"], ["raw-html", "<hr>"],
+                "main-display", "prestige-button", ["upgrades", "1234"], ["raw-html", "<hr>"],
                 ["display-text", function () { return hasUpgrade("H", 12) ? `You have ${format(player.H.clouds)} clouds.<br><span style="font-size: 15px">They form and dissipate randomly. Currently: ${cloud_x() == 1 ? "Forming" : "Dissipating"}</span>(${format(cloudGain())}/s)` : "" }],
                 ["raw-html", "<br><hr><br>"],
                 ["display-text", function () { return hasUpgrade("H", 21) ? `${format(player.H.rain)}mm of rain has fallen to the ground.<br><span style="font-size: 15px">Current rain rate: ${format(rainGain())}mm/h [Requires 10 clouds]</span>` : `` }]
@@ -204,7 +204,7 @@ addLayer("H", {
                 ["display-text",function(){return `Chance for improvement: 1/${format(new OmegaNum(10).pow(player.H.fert.div(baseQual(player.H.points)).sub(1)))}`}],
                 ["clickables", "1"],
                 ["display-text",`<span id="fert">Click the button above to buy fertilizers!</span>`],
-                ["upgrades", "45"]
+                ["upgrades", "5"]
             ]
         }
     },
@@ -320,6 +320,20 @@ addLayer("H", {
             description: "Unlocks cloud fertilizers.",
             unlocked() { return hasUpgrade("H", 34) },
             cost: new ExpantaNum(1e6)
+        },
+        41: {
+            title: "Intermediate evaporatn't",
+            description: "Tony: I deal with this too. Surprise!<hr>Humiditity boosts rain rate, up to a maximum of 2x.",
+            unlocked() { return hasUpgrade("H", 35) },
+            cost: new ExpantaNum(1e9),
+            effect() { return player.H.points.div(3e9).add(1).log10().add(1).log10().add(1).pow(-1).times(-1).add(2).max(1) },
+            effectDisplay(){return `x${format(this.effect())}`}
+        },
+        42: {
+            title: "The un-vice versa part",
+            description: "Tony: Yeah this needs a BIT of balancing...<hr><b>From asymmetry to symmetry, and vice versa</b> effect ^2.",
+            unlocked() { return hasUpgrade("H", 34) },
+            cost: new ExpantaNum(1e10)
         }
     },
     clickables: {
@@ -367,7 +381,7 @@ addLayer("T", {
         "prestige-button",
         ["clickables", 1],
         ["raw-html", "<br><hr><br>"],
-        ["upgrades","12"],
+        ["upgrades","123"],
         ["raw-html","<hr>"],
         ["display-text", function () { return `Your <b>${format(player.T.heat)}</b> heat &rarr; ${format(getTempVariance(player.T.heat).add(25))} degrees.<br>Your <b>${format(player.T.cold)}</b> cold &rarr; ${format(getTempVariance(player.T.cold).times(-1).add(25))} degrees.` }],
         ["display-text", function(){return `This generates an extra wind of +${format(tempWind())}km/h.`}]
@@ -381,6 +395,7 @@ addLayer("T", {
             onClick() {
                 x = player.T.points
                 if (hasUpgrade("T", 21)) { x = x.times(upgradeEffect("T", 21)) }
+                if (hasUpgrade("A", 12)) { x = x.times(upgradeEffect("A", 12)) }
                 player.T.heat = player.T.heat.add(x)
                 player.T.points = new ExpantaNum(0)
             },
@@ -434,7 +449,11 @@ addLayer("T", {
             title: "From asymmetry to symmetry, and vice versa",
             cost: new ExpantaNum(250),
             description: "Coldness boosts heat.",
-            effect() { return player.T.cold.div(10000).add(1).log10().add(1).pow(2) },
+            effect() {
+                c = player.T.cold.div(10000).add(1).log10().add(1).pow(2)
+                if (hasUpgrade("H",42)){c = c.pow(2)}
+                return c
+             },
             effectDisplay() { return `*${format(this.effect())}` }
         },
         22: {
@@ -456,12 +475,53 @@ addLayer("A", {
     baseAmount() {
         return player.points
     },
-    unlocked(){player.A.unlocked = true},
+    unlocked(){player.A.unlocked = player.T.unlocked},
     type: "none",
     startData() {
         return {
             unlocked: true,
             points: new ExpantaNum(0),
+            money: new ExpantaNum(0)
+        }
+    },
+    tabFormat: {
+        "Main":
+        {content: [
+                "main-display",
+                ["raw-html", "<hr>"],
+                ["display-text", function () { return awarenessText() }],
+                ["upgrades", 1]
+            ]
+        },
+        "Money": {
+            content: [
+                "main-display",
+                ["display-text", function () { return `You have ${format(player.A.money,4)}$<br>Gaining ${format(moneyGain(),4)}$/s.` }],
+                ["upgrades","2"]
+        ]}},
+    upgrades: {
+        11: {
+            title: "Let us be known",
+            cost: new OmegaNum(3),
+            description: "Tony: Hey! There's something weird with the weather. <hr>Unlocks money."
+        },
+        12: {
+            title: "(Not) Global warming?",
+            cost: new OmegaNum(100),
+            description: "Tony: Well, industries were a thing, weren't it?<hr>Awareness boosts heat gain.",
+            effect() { return player.A.points.add(1).tetrate(1.01).div(10).sub(1) },
+            effectDisplay(){return `x${format(this.effect())}`}
+        },
+        21: {
+            fullDisplay() { return `<h3>Borrow a generator</h3><br>Tony: Well, since you're so into doing this...<hr>x1.5 rain rate.<br><br>Cost: 0.05$` },
+            canAfford() { return player.A.money.gte(0.05) },
+            pay(){player.A.money = player.A.money.sub(0.05)}
+        },
+        22: {
+            fullDisplay() { return `<h3>Candy canes</h3><br>Dawn: Welcome to my shop! You can buy free energy, and then woosh~ All the wind there is!<br><i>I'm not from the game vivid/stasis! So does Tony!</i><hr>+3km/h wind speed.<br><br>Cost: 0.25$` },
+            canAfford() { return player.A.money.gte(0.25) },
+            pay() { player.A.money = player.A.money.sub(0.25) },
+            style: {"height": "200px"}
         }
     }
 })
