@@ -2,7 +2,7 @@
 	transition-duration: 0.5s;
 	text-align: center;
 	font-family: "Roboto";
-	font-weight: bold;
+	font-weight: 200;
 	table-align: center;
 	margin: auto;
 	-webkit-text-size-adjust: none;
@@ -68,12 +68,9 @@ h1, h2, h3, b, input {
 .treeNode {
 	height: 100px;
 	width: 100px;
-	border: var(--hqProperty1);
-	border-color: rgba(0, 0, 0, 0.125);
-	border-radius: 50%;
 	box-shadow: var(--hqProperty2a), var(--hqProperty2b);
 	font-size: 40px;
-	color: rgba(0, 0, 0, 0.5);
+	color: rgba(0, 0, 0);
 	text-shadow: var(--hqProperty3);
 	padding: 0;
 	margin: 0 10px 0 10px;

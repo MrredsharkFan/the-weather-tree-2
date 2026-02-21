@@ -44,7 +44,8 @@ function getPointGen() {
 	let gain = new ExpantaNum(1)
 	if (hasUpgrade("w", 12)) { gain = gain.times(upgradeEffect("w", 12)) }
 	if (hasUpgrade("H", 13)) { gain = gain.times(upgradeEffect("H", 13)) }
-	if (hasUpgrade("H",22)){gain = gain.times(upgradeEffect("H",22))}
+	if (hasUpgrade("H", 22)) { gain = gain.times(upgradeEffect("H", 22)) }
+	if (hasUpgrade("w",22)){gain = gain.times(upgradeEffect("w",22))}
 	return gain
 }
 
@@ -84,7 +85,10 @@ function pesudo_random(seed) {
 function getWindSpeed() {
 	b = player.w.points.add(1).slog().times(2)
 	b = b.times(player.H.points.add(1).slog().times(0.5).add(1))
-	if (hasUpgrade("H",23)){b = b.add(upgradeEffect("H",23))}
+	if (hasUpgrade("H", 23)) { b = b.add(upgradeEffect("H", 23)) }
+	if (player.T.total.gte(1)) { b = b.add(tempWind()) }
+	if (hasUpgrade("w", 23)) { b = b.add(upgradeEffect("w", 23)) }
+	if (hasUpgrade("H", 15)) { b = b.add(upgradeEffect("H", 15)) }
 	return b
 }
 
@@ -98,7 +102,12 @@ function getPotentialGain() {
 function cloudGain() {
 	g = new ExpantaNum(1)
 	if (hasUpgrade("H", 14)) { g = g.times(upgradeEffect("H", 14)) }
-	if (hasUpgrade("H",31)){g = g.times(2)}
+	if (hasUpgrade("H", 31)) { g = g.times(2) }
+	if (hasUpgrade("T", 12)) { g = g.times(upgradeEffect("T", 12)) }
+	if (cloud_x() == -1) {
+		if (hasUpgrade("T", 13)) { g = g.div(1.25) }
+		if (hasUpgrade("T", 15)) { g = g.div(upgradeEffect("T", 15)) }
+	}
 	return g
 }
 
@@ -108,5 +117,27 @@ function cloud_x() {
 }
 
 function rainGain() {
-	return player.H.clouds.slog().pow(0.5).sub(1).max(0)
+	e = player.H.clouds.slog().pow(0.5).sub(1).max(0)
+	if (hasUpgrade("H", 24)) { e = e.times(upgradeEffect("H", 24)) }
+	if (hasUpgrade("H", 35)) { e = e.times(fertEffect(player.H.fert)) }
+	return e
+}
+
+function baseQual(x) {
+	return x.div(100000).add(1).log10().add(1).pow(2)
+}
+
+function fertEffect(x) {
+	return x.add(1).slog().pow(2).add(1)
+}
+
+//heat
+function getTempVariance(val) {
+	c = val.add(1).slog().add(1).log().add(1).pow(2).tetrate(1.625).sub(1).div(10)
+	if (hasUpgrade("w",24)){c = c.times(upgradeEffect("w",24))}
+	return c
+}
+
+function tempWind() {
+	return getTempVariance(player.T.heat).add(getTempVariance(player.T.cold)).pow(0.75)
 }
