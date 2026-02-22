@@ -63,6 +63,9 @@ addLayer("w", {
                 if (hasUpgrade("w", 21)) { e = e.pow(1.5) }
                 if (hasUpgrade("w", 31)) { e = e.tetrate(1.01) }
                 if (hasUpgrade("w", 32)) { e = e.tetrate(1.01) }
+                if (e.gte(1e45)) {
+                    e = e.div(1e35).log10().pow(45)
+                }
                 return e
             },
             effectDisplay() {
@@ -179,7 +182,9 @@ addLayer("H", {
             droplets: new ExpantaNum(0),
             clouds: new ExpantaNum(0),
             rain: new ExpantaNum(0),
-            fert: new ExpantaNum(0)
+            fert: new ExpantaNum(0),
+            lightning: new ExpantaNum(0),
+            level: new ExpantaNum(0),
         }
     },
     gainMult() {
@@ -190,11 +195,10 @@ addLayer("H", {
     tabFormat: {
         "Main": {
             content: [
-                "main-display", "prestige-button", ["upgrades", "1234"], ["raw-html", "<hr>"],
-                ["display-text", function () { return hasUpgrade("H", 12) ? `You have ${format(player.H.clouds)} clouds.<br><span style="font-size: 15px">They form and dissipate randomly. Currently: ${cloud_x() == 1 ? "Forming" : "Dissipating"}</span>(${format(cloudGain())}/s)` : "" }],
+                "main-display", "prestige-button", ["display-text", function () { return hasUpgrade("H", 12) ? `You have ${format(player.H.clouds)} clouds.<br><span style="font-size: 15px">They form and dissipate randomly. Currently: ${cloud_x() == 1 ? "Forming" : "Dissipating"}</span>(${format(cloudGain())}/s)` : "" }],
                 ["raw-html", "<br><hr><br>"],
-                ["display-text", function () { return hasUpgrade("H", 21) ? `${format(player.H.rain)}mm of rain has fallen to the ground.<br><span style="font-size: 15px">Current rain rate: ${format(rainGain())}mm/h [Requires 10 clouds]</span>` : `` }]
-            ]
+                ["display-text", function () { return hasUpgrade("H", 21) ? `${format(player.H.rain)}mm of rain has fallen to the ground.<br><span style="font-size: 15px">Current rain rate: ${format(rainGain())}mm/h (Requires 10 clouds)<br>A new feature will be unlocked at 30mm/h!</span>` : `` }]
+            ,["upgrades", "1234"], ["raw-html", "<hr>"]]
         },
         "Fertilizers": {
             unlocked() { return hasUpgrade("H", 35) },
@@ -204,7 +208,27 @@ addLayer("H", {
                 ["display-text",function(){return `Chance for improvement: 1/${format(new OmegaNum(10).pow(player.H.fert.div(baseQual(player.H.points)).sub(1)))}`}],
                 ["clickables", "1"],
                 ["display-text",`<span id="fert">Click the button above to buy fertilizers!</span>`],
-                ["upgrades", "5"]
+            ]
+        },
+        "Lightning": {
+            unlocked() { return rainGain().gte(30) },
+            style: {"background-color":"#353500", "color":"#ffff55"},
+            content: [
+                "main-display", "prestige-button",
+                ["display-text", function () { return `Your cluster of clouds are now generating lightning!<br>You have ${format(player.H.lightning)} lightning strikes. (1/${format(lightning_chance()*20)} to get ${format(lightning_gain())} per 50ms)` }],
+                ["upgrades","5"]
+            ]
+        },
+        "Flooding": {
+            unlocked() { return hasUpgrade("H", 54) },
+            style: {
+                "background-color": "#000055",
+                "color":"#aaaaff"
+            },
+            content: [
+                "main-display", "prestige-button",
+                ["display-text", function () { return `The water level is rising due to the rain!<br>Your current water level is ${format(player.H.level)}mm. (${format(floodGain())}/s)` }],
+                ["upgrades",["7","70"]]
             ]
         }
     },
@@ -220,11 +244,12 @@ addLayer("H", {
             effect() {
                 e = new ExpantaNum(10).pow(getWindSpeed().add(1).log10().pow(2))
                 if (hasUpgrade("H", 32)) {
-                    e = e.tetrate(1.5)
+                    e = e.tetrate(1.5) //if someone were to ask, why? I'll answer: Don't fucking ask me
                 }
+                if (hasUpgrade("H", 43)) { e = e.pow(1.2) }
                 if (hasUpgrade("H", 33)) {
                 e = e.tetrate(1.125)
-              }
+                }
                 return e
             },
             effectDisplay() { return `[1st effect] x${format(this.effect())}` }
@@ -256,7 +281,11 @@ addLayer("H", {
             description: "Rain rate boosts wind speed.",
             cost: new ExpantaNum(5e6),
             unlocked() { return (player.H.total.gte(1e6)) },
-            effect() { return rainGain().add(1).log10().pow(0.75) },
+            effect() {
+                e = rainGain().add(1).log10().pow(0.75)
+                if (hasUpgrade("H",43)){e = e.times(1.5)}
+                return e
+             },
             effectDisplay() { return `Currently: +${format(this.effect())}km/h` }
         },
         21: {
@@ -312,7 +341,11 @@ addLayer("H", {
             description: "Humidity boosts coldness gain.",
             unlocked() { return hasUpgrade("H", 32) },
             cost: new ExpantaNum(25000),
-            effect() { return player.H.points.div(10000).add(1).log().pow(3) },
+            effect() {
+                e = player.H.points.div(10000).add(1).log().pow(3)
+                if (hasUpgrade("H",74)){e = e.pow(8)}
+                return e
+             },
             effectDisplay() { return `x${format(this.effect())}` }
         },
         35: {
@@ -334,6 +367,79 @@ addLayer("H", {
             description: "Tony: Yeah this needs a BIT of balancing...<hr><b>From asymmetry to symmetry, and vice versa</b> effect ^2.",
             unlocked() { return hasUpgrade("H", 34) },
             cost: new ExpantaNum(1e10)
+        },
+        43: {
+            title: "Darkened clouds",
+            description: "Tony: Wait, did i hear some noise outside?<hr><b>Unhinged associations</b> effect x1.5.",
+            unlocked() { return hasUpgrade("H", 34) },
+            cost: new ExpantaNum(5e12)
+        },
+        44: {
+            title: "Better<sup>3</sup> Carrier",
+            description: "Saturday: Imagine trying to tetrate it further without NaNs or the most stupid softcaps<hr><b>Let there be water!</b> effect ^2 before <b>Better<sup>1.2</sup> Carrier</b>.",
+            unlocked() { return hasUpgrade("H", 43) },
+            cost: new ExpantaNum(2e15)
+        },
+        51: {
+            fullDisplay() { return `<h3>I see light, thus I shall blow</h3><br>Tony: I think those strikes can power my own fans!<hr>Lightning strikes boost wind speed, very slightly.<br><br>Cost: 1 lightning strike<br>Currently: +${format(this.effect())}km/h` },
+            canAfford() { return player.H.lightning.gte(1) },
+            pay() { player.H.lightning = player.H.lightning.sub(1) },
+            effect(){return player.H.lightning.add(1).slog().pow(2)}
+        },
+        52: {
+            fullDisplay() { return `<h3>Untitled</h3><br>Tony: It feels like a title isn't needed anymore.<hr>Saturday: No I think it's needed<hr>Humidity boosts lightning strike gain.<br><br>Cost: 2 lightning strikes<br>Currently: x${format(this.effect())}` },
+            canAfford() { return player.H.lightning.gte(2) },
+            pay() { player.H.lightning = player.H.lightning.sub(2) },
+            effect() {
+                c = player.H.points.div(1e13).add(1).pow(0.25)
+                if (c.gte(1000)){c = c.div(100).log10().times(10).pow(2).times(10)}
+                return c
+            }            
+        },
+        53: {
+            fullDisplay() { return `<h3>Rapid deterioration</h3><br>Dawn: The water level is rising in my store? Maybe I shouldn't care right now.<hr>Lightning strikes boost itself.<br><br>Cost: 10 lightning strikes<br>Currently: x${format(this.effect())}` },
+            canAfford() { return player.H.lightning.gte(10) },
+            pay() { player.H.lightning = player.H.lightning.sub(10) },
+            effect() { return player.H.lightning.add(1).log10().add(1).pow(1.25) }
+        },
+        54: {
+            fullDisplay() { return `<h3>Rapid deterioration II</h3><br>Dawn: Okay I should now care about that...<hr>Saturday: But can you give me 30k?<hr>Unlocks <b>Water Level</b><br><br>Cost: 30,000 lightning strikes` },
+            canAfford() { return player.H.lightning.gte(30000) },
+            pay() { player.H.lightning = player.H.lightning.sub(30000) },
+        },
+        71: {
+            fullDisplay() { return `Dawn: Let's make water turbines!!!!<hr>Wind is boosted slightly by water level.<br><br>Cost: 30mm water level<br>Currently: +${format(this.effect())}km/h` },
+            canAfford() { return player.H.level.gte(30) },
+            pay() { player.H.level = player.H.level.sub(30) },
+            effect() { return player.H.level.div(100).add(1).log10() }
+        },
+        72: {
+            fullDisplay() { return `Dawn: I shall be slightly evil, and make timewalls. Have the water flow in... Gradually...<hr>Saturday: Stop to do that! Wait...<hr>Coldness is boosted by water level.<br><br>Cost: 45mm water level<br>Currently: x${format(this.effect())}` },
+            canAfford() { return player.H.level.gte(45) },
+            pay() { player.H.level = player.H.level.sub(45) },
+            effect() { return player.H.level.tetrate(2).pow(0.34) }
+        },
+        73: {
+            fullDisplay() { return `Dawn: Show em no mercy. Let the power lines fall.<hr>Lightning is boosted by water level.<br><br>Cost: 52mm water level<br>Currently: x${format(this.effect())}` },
+            canAfford() { return player.H.level.gte(52) },
+            pay() { player.H.level = player.H.level.sub(52) },
+            effect() { return player.H.level.max(60).div(50).add(1).tetrate(1.025) }
+        },
+        74: {
+            fullDisplay() { return `Tony: Let me try and clear this mess.<hr>Dawn: I won't let you :3c and I will open my freezer door<hr><b>Soakingly Cold</b> effect ^8.<br><br>Cost: 80mm water level` },
+            canAfford() { return player.H.level.gte(80) },
+            pay() { player.H.level = player.H.level.sub(80) },
+        },
+        701: {
+            fullDisplay() { return `Tony: Wait, then where are the tornadoes<hr>Dawn: We are not doing tornadoes, silly. Now, just enjoy the view outside.<hr>Base fertilizer quaity x2.<br><br>Cost: 90mm water level` },
+            canAfford() { return player.H.level.gte(90) },
+            pay() { player.H.level = player.H.level.sub(90) },
+        },
+        702: {
+            fullDisplay() { return `Tony: Can't we just do an upgrade that boosts points again?<hr>Dawn: Not without my help!<hr>Water level boosts points.<br><br>Cost: 120mm water level<br>Currently: x${format(this.effect())}` },
+            canAfford() { return player.H.level.gte(120) },
+            pay() { player.H.level = player.H.level.sub(120) },
+            effect(){return player.H.level.add(1).tetrate(1.4)}
         }
     },
     clickables: {
@@ -383,12 +489,12 @@ addLayer("T", {
             content:[
             "main-display",
             "prestige-button",
-            ["clickables", 1],
+                ["clickables", 1], 
+                ["display-text", function () { return `Your <b>${format(player.T.heat)}</b> heat &rarr; ${format(getTempVariance(player.T.heat).add(25))} degrees.<br>Your <b>${format(player.T.cold)}</b> cold &rarr; ${format(getTempVariance(player.T.cold).times(-1).add(25))} degrees.` }],
+                ["display-text", function () { return `This generates an extra wind of +${format(tempWind())}km/h.` }],
             ["raw-html", "<br><hr><br>"],
             ["upgrades", "123"],
-            ["raw-html", "<hr>"],
-            ["display-text", function () { return `Your <b>${format(player.T.heat)}</b> heat &rarr; ${format(getTempVariance(player.T.heat).add(25))} degrees.<br>Your <b>${format(player.T.cold)}</b> cold &rarr; ${format(getTempVariance(player.T.cold).times(-1).add(25))} degrees.` }],
-            ["display-text", function () { return `This generates an extra wind of +${format(tempWind())}km/h.` }]
+            ["raw-html", "<hr>"]
             ]
         },
         "Tools": {
@@ -397,10 +503,9 @@ addLayer("T", {
                 "main-display",
                 "prestige-button",
                 ["display-text", function () { return `<hr>You have ${format(player.A.money)}$.<hr>${heatToolText()}` }],
+                ["display-text", function () { return `<hr>x${format(heatToolEffect()[0])} heat<br>x${format(heatToolEffect()[1])} cold` }],
                 ["clickables", "2"],
-                ["raw-html", "<br><hr>"],
-                ["display-text", function () { return `x${format(heatToolEffect()[0])} heat<br>x${format(heatToolEffect()[1])} cold` }]
-            ]
+                ["raw-html", "<br><hr>"]            ]
         }
 },
     onPrestige() {
@@ -426,6 +531,8 @@ addLayer("T", {
                 if (hasUpgrade("H", 25)) { x = x.times(upgradeEffect("H", 25)) }
                 if (hasUpgrade("H", 34)) { x = x.times(upgradeEffect("H", 34)) }
                 if (hasUpgrade("A", 22)) { x = x.times(heatToolEffect()[1]) }
+                if (hasUpgrade("A", 25)) { x = x.times(upgradeEffect("A", 25)) }
+                if (hasUpgrade("H", 72)) { x = x.times(upgradeEffect("H", 72)) }
                 player.T.cold = player.T.cold.add(x)
                 player.T.points = new ExpantaNum(0)
             },
@@ -565,7 +672,6 @@ addLayer("A", {
             fullDisplay() { return `<h3>Candy canes</h3><br>Dawn: Welcome to my shop! You can buy free energy, and then woosh~ All the wind there is!<br><i>I'm not from the game vivid/stasis! So does Tony!</i><hr>+3km/h wind speed.<br><br>Cost: 0.25$` },
             canAfford() { return player.A.money.gte(0.25) },
             pay() { player.A.money = player.A.money.sub(0.25) },
-            style: {"height": "200px"}
         },
         23: {
             fullDisplay() { return `<h3>Heater/Cooler</h3><br>Dawn: Well... We do sell everything here. Notice why my room is always covered in ic-<hr>Unlock Air conditioners/Heaters.<br><br>Cost: 500$` },
@@ -577,6 +683,12 @@ addLayer("A", {
             canAfford() { return player.A.money.gte(2000) },
             pay() { player.A.money = player.A.money.sub(2000) },
             effect(){return rainGain().sub(19).max(1).tetrate(1.05)}
+        },
+        25: {
+            fullDisplay() { return `Tony: It's heard that <i>Indifference</i> comes from money, right?<hr>Money boosts coldness gain.<br><br>Cost: 1,000,000$<hr>Currently: x${format(this.effect())}` },
+            canAfford() { return player.A.money.gte(1000000) },
+            pay() { player.A.money = player.A.money.sub(1000000) },
+            effect() { return player.A.money.div(10000).add(1).tetrate(1.125) }
         }
     }
 })

@@ -2,7 +2,7 @@
 	transition-duration: 0.5s;
 	text-align: center;
 	font-family: "Roboto";
-	font-weight: 200;
+	font-weight: 10000;
 	table-align: center;
 	margin: auto;
 	-webkit-text-size-adjust: none;
@@ -238,10 +238,9 @@ h1, h2, h3, b, input {
 }
 
 .upg {
-	min-height: 120px;
-	width: 120px;
-	border-radius: 25%;
-	border: 2px solid;
+	min-height: 160px;
+	width: 125px;
+	border-radius: 10%;
 	border-color: rgba(0, 0, 0, 0.125);
 	font-size: 10px;
 	overflow: visible;

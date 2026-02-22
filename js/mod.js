@@ -45,7 +45,8 @@ function getPointGen() {
 	if (hasUpgrade("w", 12)) { gain = gain.times(upgradeEffect("w", 12)) }
 	if (hasUpgrade("H", 13)) { gain = gain.times(upgradeEffect("H", 13)) }
 	if (hasUpgrade("H", 22)) { gain = gain.times(upgradeEffect("H", 22)) }
-	if (hasUpgrade("w",22)){gain = gain.times(upgradeEffect("w",22))}
+	if (hasUpgrade("w", 22)) { gain = gain.times(upgradeEffect("w", 22)) }
+	if (hasUpgrade("H", 702)) { gain = gain.times(upgradeEffect("H", 702)) }
 	return gain
 }
 
@@ -90,6 +91,8 @@ function getWindSpeed() {
 	if (hasUpgrade("w", 23)) { b = b.add(upgradeEffect("w", 23)) }
 	if (hasUpgrade("H", 15)) { b = b.add(upgradeEffect("H", 15)) }
 	if (hasUpgrade("A", 22)) { b = b.add(3) }
+	if (hasUpgrade("H", 51)) { b = b.add(upgradeEffect("H", 51)) }
+	if (hasUpgrade("H", 71)) { b = b.add(upgradeEffect("H", 71)) }
 	return b
 }
 
@@ -124,19 +127,52 @@ function rainGain() {
 	if (hasUpgrade("A", 21)) { e = e.times(1.5) }
 	if (hasUpgrade("H", 41)) { e = e.times(upgradeEffect("H", 41)) }
 	if (e.gte(30)) {
-		e = e.div(30).add(1).slog().times(5).add(25)
+		e = e.div(30).slog().times(30).add(30)
 	}
 	return e
 }
 
 function baseQual(x) {
 	t = x.div(100000).add(1).log10().add(1).pow(2)
-	if (hasUpgrade("A",13)){t = t.times(upgradeEffect("A",13))}
+	if (hasUpgrade("A", 13)) { t = t.times(upgradeEffect("A", 13)) }
+	if (hasUpgrade("H",701)){t = t.times(2)}
 	return t
 }
 
 function fertEffect(x) {
 	return x.add(1).slog().pow(2).add(1)
+}
+
+function lightning_chance() {
+	y = new OmegaNum(50)
+	y = y.div(rainGain().sub(29).pow(0.5)).min(50)
+	return y.toString()
+}
+
+function lightning_gain() {
+	y = new OmegaNum(1)
+	if (hasUpgrade("H", 52)) { y = y.times(upgradeEffect("H", 52)) }
+	if (hasUpgrade("H", 53)) { y = y.times(upgradeEffect("H", 53)) }
+	if (hasUpgrade("H", 73)) { y = y.times(upgradeEffect("H", 73)) }
+	return y
+}
+
+function lightning_logic(dt) {
+	r = lightning_chance()/(dt+1e-15)+1
+	if (Math.random() < 1 / r) {
+		player.H.lightning = player.H.lightning.add(lightning_gain())
+	}
+}
+
+function baseFloodGain() {
+	v = rainGain().sub(36).max(0)
+	return v
+}
+
+function floodGain() {
+	w = baseFloodGain()
+	w = w.times(player.H.level.div(w.add(0.001)).times(-1).add(60).div(60))
+	return w
 }
 
 //heat
@@ -193,5 +229,5 @@ function heatToolText() {
 
 function heatToolEffect() {
 	m = [toolLevel(player.T.heater, 4), toolLevel(player.T.cooler, 4)]
-	return [new ExpantaNum.pow(3,m[0][1].sub(1).pow(1.5)),new ExpantaNum.pow(3,m[1][1].sub(1).pow(1.5))]
+	return [new ExpantaNum.pow(3,m[0][1].pow(1.5)),new ExpantaNum.pow(3,m[1][1].pow(1.5))]
 }
