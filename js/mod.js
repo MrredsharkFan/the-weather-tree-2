@@ -169,9 +169,17 @@ function baseFloodGain() {
 	return v
 }
 
+function floodLoss() {
+	j = new OmegaNum(60)
+	if (hasUpgrade("H", 711)) { j = j.times(upgradeEffect("H", 711)) }
+	return j
+}
+
 function floodGain() {
 	w = baseFloodGain()
-	w = w.times(player.H.level.div(w.add(0.001)).times(-1).add(60).div(60))
+	m = new OmegaNum(1)
+	if (hasUpgrade("H",714)){m = m.times(10)}
+	w = w.times(player.H.level.div(w.add(0.001)).times(-1).add(floodLoss()).div(floodLoss())).times(m)
 	return w
 }
 
@@ -207,7 +215,8 @@ function moneyGain() {
 	t = awarenessGain()[4]
 	t = t.add(100).pow(0.5).sub(10).div(100)
 	if (t.gte(10)) { t = t.log10().pow(2).times(10).add(1) }
-	if (hasUpgrade("A",24)){t = t.times(upgradeEffect("A",24))}
+	if (hasUpgrade("A", 24)) { t = t.times(upgradeEffect("A", 24)) }
+	if (hasUpgrade("H", 704)) { t = t.times(upgradeEffect("H", 704)) }
 	return t
 }
 
@@ -227,7 +236,18 @@ function heatToolText() {
 	return `You have heater level ${format(m[0][1])}, ${format(m[0][4])}/${format(m[0][2])}(${format(m[0][3])}%)$.<br>You have cooler level ${format(m[1][1])}, ${format(m[1][4])}/${format(m[1][2])}(${format(m[1][3])}%)$.`
 }
 
+function coolerBase() {
+	a = new OmegaNum(1.5)
+	if (hasUpgrade("H", 712)) { a = a.add(upgradeEffect("H", 712)) }
+	return a
+}
+
 function heatToolEffect() {
 	m = [toolLevel(player.T.heater, 4), toolLevel(player.T.cooler, 4)]
-	return [new ExpantaNum.pow(3,m[0][1].pow(1.5)),new ExpantaNum.pow(3,m[1][1].pow(1.5))]
+	return [new ExpantaNum.pow(3,m[0][1].pow(1.5)),new ExpantaNum.pow(3,m[1][1].pow(coolerBase()))]
+}
+
+//damages
+function houseDamage() {
+	o = player.H.level.max(200).sub(200).pow(2)
 }

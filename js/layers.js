@@ -23,7 +23,8 @@ addLayer("w", {
     gainMult() {
         mult = new ExpantaNum(1)
         if (hasUpgrade("T", 11)) { mult = mult.times(3) }
-        if (hasUpgrade("T", 14)) { mult = mult.times(upgradeEffect("T",14)) }
+        if (hasUpgrade("T", 14)) { mult = mult.times(upgradeEffect("T", 14)) }
+        if (hasUpgrade("T", 23)) { mult = mult.times(upgradeEffect("T", 23)) }
         return mult
     },
     gainExp() {
@@ -104,7 +105,10 @@ addLayer("w", {
             cost: new ExpantaNum(55555),
             description: "Wind boosts points.",
             effect() {
-                return player.w.points.div(100000).add(1).log().add(1).pow(2)
+                c = player.w.points.div(100000).add(1).log().add(1).pow(2)
+                if (hasUpgrade("w", 33)) { c = c.pow(4) }
+                if (hasUpgrade("w",34)){c = c.pow(2)}
+                return c
             },
             effectDisplay() {
                 return `x${format(this.effect())}`
@@ -118,7 +122,9 @@ addLayer("w", {
             cost: new ExpantaNum(1000000),
             description: "Potential boosts wind.",
             effect() {
-                return player.w.potential.add(10).slog().pow(0.75).sub(1)
+                e = player.w.potential.add(10).slog().pow(0.75).sub(1)
+                if (hasUpgrade("T", 24)) { e = e.times(2)}
+                return e
             },
             effectDisplay() {
                 return `+${format(this.effect())}km/h`
@@ -155,6 +161,22 @@ addLayer("w", {
             title: "Point dynamics II",
             cost: new ExpantaNum(2e11),
             description: "<b>Finding the power within</b> effect ^^1.01, again."
+        },
+        33: {
+            unlocked() {
+                return player.points.gte(1e100)
+            },
+            title: "Untitled-2",
+            cost: new ExpantaNum(1e69),
+            description: "Dawn: Where the hell am I?<hr><b>Point to the direction of the blow</b> effect ^4."
+        },
+        34: {
+            unlocked() {
+                return player.points.gte(1e100)
+            },
+            title: "Untitled-3",
+            cost: new ExpantaNum(1e79),
+            description: "Dawn: Finally getting the hand of it...<hr><b>Point to the direction of the blow</b> effect ^2."
         }
     },
     layerShown() {
@@ -226,9 +248,10 @@ addLayer("H", {
                 "color":"#aaaaff"
             },
             content: [
+                ["display-text","From here onwards, the bolded words that's not the cost/effect are the upgrade name.<br><span style=\"font-size: 13px; color: red\">Also, welcome to <i>Timewall hell.</i> (Not as bad as RBNR though)</span>"],
                 "main-display", "prestige-button",
                 ["display-text", function () { return `The water level is rising due to the rain!<br>Your current water level is ${format(player.H.level)}mm. (${format(floodGain())}/s)` }],
-                ["upgrades",["7","70"]]
+                ["upgrades",["7","70","71"]]
             ]
         }
     },
@@ -408,38 +431,100 @@ addLayer("H", {
             pay() { player.H.lightning = player.H.lightning.sub(30000) },
         },
         71: {
-            fullDisplay() { return `Dawn: Let's make water turbines!!!!<hr>Wind is boosted slightly by water level.<br><br>Cost: 30mm water level<br>Currently: +${format(this.effect())}km/h` },
+            fullDisplay() { return `Dawn: Let's make <b>water turbines</b>!!!!<hr>Wind is boosted slightly by water level.<br><br>Cost: 30mm water level<br>Currently: +${format(this.effect())}km/h` },
             canAfford() { return player.H.level.gte(30) },
             pay() { player.H.level = player.H.level.sub(30) },
-            effect() { return player.H.level.div(100).add(1).log10() }
+            effect() {
+                e = player.H.level.div(100).add(1).log10()
+                if (hasUpgrade("H", 703)) { e = e.times(2) }
+                return e
+             }
         },
         72: {
-            fullDisplay() { return `Dawn: I shall be slightly evil, and make timewalls. Have the water flow in... Gradually...<hr>Saturday: Stop to do that! Wait...<hr>Coldness is boosted by water level.<br><br>Cost: 45mm water level<br>Currently: x${format(this.effect())}` },
+            fullDisplay() { return `Dawn: I shall be slightly evil, and make timewalls. Have us gradually <b>submerged in water</b><hr>Saturday: Stop to do that! Wait...<hr>Coldness is boosted by water level.<br><br>Cost: 45mm water level<br>Currently: x${format(this.effect())}` },
             canAfford() { return player.H.level.gte(45) },
             pay() { player.H.level = player.H.level.sub(45) },
             effect() { return player.H.level.tetrate(2).pow(0.34) }
         },
         73: {
-            fullDisplay() { return `Dawn: Show em no mercy. Let the power lines fall.<hr>Lightning is boosted by water level.<br><br>Cost: 52mm water level<br>Currently: x${format(this.effect())}` },
+            fullDisplay() { return `Dawn: Show em no mercy. Let the <b>power lines</b> fall.<hr>Lightning is boosted by water level.<br><br>Cost: 52mm water level<br>Currently: x${format(this.effect())}` },
             canAfford() { return player.H.level.gte(52) },
             pay() { player.H.level = player.H.level.sub(52) },
             effect() { return player.H.level.max(60).div(50).add(1).tetrate(1.025) }
         },
         74: {
-            fullDisplay() { return `Tony: Let me try and clear this mess.<hr>Dawn: I won't let you :3c and I will open my freezer door<hr><b>Soakingly Cold</b> effect ^8.<br><br>Cost: 80mm water level` },
+            fullDisplay() { return `Tony: Let me try and clear this mess.<hr>Dawn: I won't let you :3c and I will open my <b>freezer door</b><hr><b>Soakingly Cold</b> effect ^8.<br><br>Cost: 80mm water level` },
             canAfford() { return player.H.level.gte(80) },
             pay() { player.H.level = player.H.level.sub(80) },
         },
         701: {
-            fullDisplay() { return `Tony: Wait, then where are the tornadoes<hr>Dawn: We are not doing tornadoes, silly. Now, just enjoy the view outside.<hr>Base fertilizer quaity x2.<br><br>Cost: 90mm water level` },
+            fullDisplay() { return `Tony: Wait, then where are the tornadoes<hr>Dawn: We are not doing tornadoes, silly. Just <b>deal with the research.</b><hr>Base fertilizer quaity x2.<br><br>Cost: 90mm water level` },
             canAfford() { return player.H.level.gte(90) },
             pay() { player.H.level = player.H.level.sub(90) },
         },
         702: {
-            fullDisplay() { return `Tony: Can't we just do an upgrade that boosts points again?<hr>Dawn: Not without my help!<hr>Water level boosts points.<br><br>Cost: 120mm water level<br>Currently: x${format(this.effect())}` },
+            fullDisplay() { return `Tony: Can't we just do an <b>upgrade that boosts points again</b>?<hr>Dawn: Not without my help!<hr>Water level boosts points.<br><br>Cost: 120mm water level<br>Currently: x${format(this.effect())}` },
             canAfford() { return player.H.level.gte(120) },
             pay() { player.H.level = player.H.level.sub(120) },
             effect(){return player.H.level.add(1).tetrate(1.4)}
+        },
+        703: {
+            fullDisplay() { return `Tony: I think I get the hang of <b>how to improve turbines</b>...<hr><b>Water turbines</b> are 2x stronger.<br><br>Cost: 190mm water level` },
+            canAfford() { return player.H.level.gte(190) },
+            pay() { player.H.level = player.H.level.sub(190) }
+        },
+        704: {
+            fullDisplay() { return `Saturday: Fine, let me get my magic wand here... I need <b>medical assistance!</b><hr>Based on water level, increase money gain.<br><br>Cost: 200mm water level<br>Currently: x${format(this.effect())}` },
+            canAfford() { return player.H.level.gte(200) },
+            pay() { player.H.level = player.H.level.sub(200) },
+            effect() {
+                e = player.H.level.max(150).sub(150).div(20).add(1).tetrate(1.25)
+                if (hasUpgrade("T",25)){e = e.pow(2)}
+                return e
+            }
+        },
+        711: {
+            fullDisplay() { return `Dawn: What if I <b>block drainages</b> with... my attention?<hr>Water level decay speed is lowered based on awareness.<br><br>Cost: 280mm water level<br>Currently: /${format(this.effect())}` },
+            canAfford() { return player.H.level.gte(280) },
+            pay() { player.H.level = player.H.level.sub(280) },
+            effect() {
+                return player.A.points.div(1e39).add(1).pow(0.25).slog().add(1)
+            }
+        },
+        712: {
+            fullDisplay() { return `Saturday: And I figured out how to use those waters to have <b>powered coolers</b>~<hr>Air conditioners' exponent<sup>2</sup> are better based on water level.<br><br>Cost: 520mm water level<br>Currently: +${format(this.effect(),5)}` },
+            canAfford() { return player.H.level.gte(520) },
+            pay() { player.H.level = player.H.level.sub(520) },
+            effect() {
+                return player.H.level.max(0).div(80).add(1).slog()
+            }
+        },
+        713: {
+            fullDisplay() { return `Saturday: I want to really, see the snow... Maybe I should do <b>Another trade</b>?<hr>Heat boosts coldness gain<br><br>Cost: 800mm water level<br>Currently: *${format(this.effect())}` },
+            canAfford() { return player.H.level.gte(800) },
+            pay() { player.H.level = player.H.level.sub(800) },
+            effect() {
+                return player.T.heat.add(1).log10().tetrate(2)
+            }
+        },
+        714: {
+            satText() { 
+                y = getTempVariance(player.T.cold).times(-1).add(25)
+                if (y.gte(5)) { return `Saturday: (silently watches, looking at the almost-frigid-skies, sighs)${format(y, 1)}&deg;C...<hr>Dawn: I mean, the player will get there eventually.` }
+                if (y.gte(3)) { return `Saturday: I am seeing hope, now that the thermometer reads ${format(y, 1)}&deg;C...<hr>Dawn: Don't get your hopes override the actual time!` }
+                if (y.gte(2)) { return `Saturday: (huffs)${format(y, 1)}&deg;C<hr>Dawn: Maybe you are overpushing yourself.` }
+                if (y.gte(1)) { return `Saturday: ${format(y, 1)}&deg;C. Why is it taking longer...<hr>Dawn: I know, this is what you started though...<hr>Tony: You may want to refrain.` }
+                if (y.gte(0.5)) { return `Saturday: ${format(y, 2)}&deg;C. Every fraction of a degree counts. (Looks out to the window, covered in frost, but without snow)` }
+                if (y.gte(0.25)) { return `Saturday: ${format(y, 2)}&deg;C. We are going to be there. Very shortly. The push is taking effect.` }
+                if (y.gte(0)) { return `Saturday: ${format(y, 3)}&deg;C. Look. I see those people online. Those people taking about their foresees. You won't give up, right?` }
+                else {return `Saturday: YEA BABY LET'S GO I SEE THE SNOW YAYAYAYA (dances in circles) (starts going onto a movator)`}
+            },
+            fullDisplay() { return `<h3>One more push</h3><br>${this.satText()}<hr>Wind boosts coldness gain, and x10 water level gain.<br><br>Cost: 1,000mm water level (Biggest timewall!)<br>Currently: ^${format(this.effect(), 5)}` },
+            canAfford() { return player.H.level.gte(1000) },
+            pay() { player.H.level = player.H.level.sub(1000) },
+            effect() {
+                return player.w.points.add(10).div(1e100).log10().add(1).pow(0.25)
+            }
         }
     },
     clickables: {
@@ -490,7 +575,7 @@ addLayer("T", {
             "main-display",
             "prestige-button",
                 ["clickables", 1], 
-                ["display-text", function () { return `Your <b>${format(player.T.heat)}</b> heat &rarr; ${format(getTempVariance(player.T.heat).add(25))} degrees.<br>Your <b>${format(player.T.cold)}</b> cold &rarr; ${format(getTempVariance(player.T.cold).times(-1).add(25))} degrees.` }],
+                ["display-text", function () { return `Your <b>${format(player.T.heat)}</b> heat &rarr; ${format(getTempVariance(player.T.heat).add(25),5)} degrees.<br>Your <b>${format(player.T.cold)}</b> cold &rarr; ${format(getTempVariance(player.T.cold).times(-1).add(25),5)} degrees.` }],
                 ["display-text", function () { return `This generates an extra wind of +${format(tempWind())}km/h.` }],
             ["raw-html", "<br><hr><br>"],
             ["upgrades", "123"],
@@ -533,6 +618,8 @@ addLayer("T", {
                 if (hasUpgrade("A", 22)) { x = x.times(heatToolEffect()[1]) }
                 if (hasUpgrade("A", 25)) { x = x.times(upgradeEffect("A", 25)) }
                 if (hasUpgrade("H", 72)) { x = x.times(upgradeEffect("H", 72)) }
+                if (hasUpgrade("H", 713)) { x = x.times(upgradeEffect("H", 713)) }
+                if (hasUpgrade("H", 714)) { x = x.pow(upgradeEffect("H", 714)) }
                 player.T.cold = player.T.cold.add(x)
                 player.T.points = new ExpantaNum(0)
             },
@@ -606,6 +693,26 @@ addLayer("T", {
             description: "<b>Gradient divergence</b> is stronger based on temperature.",
             effect() { return player.T.points.div(100).add(1).slog().pow(2.25).div(10).add(1) },
             effectDisplay() { return `*${format(this.effect())}` }
+        },
+        23: {
+            title: "Transfer: Potential to Kinetic",
+            unlocked(){return player.T.total.gte(1e20)},
+            cost: new ExpantaNum(1e27),
+            description: "Temperature boosts wind.",
+            effect() { return player.T.points.div(1e20).add(10).log10().pow(12.5) },
+            effectDisplay() { return `*${format(this.effect())}` }
+        },
+        24: {
+            title: "Synergy+",
+            unlocked() { return player.T.total.gte(1e20) },
+            cost: new ExpantaNum(1e31),
+            description: "<b>Synergy Synergy</b> effect x2.",
+        },
+        25: {
+            title: "Fulfill her wish",
+            unlocked() { return player.T.total.gte(1e20) },
+            cost: new ExpantaNum(1e33),
+            description: "<b>Medical assistance</b> effect ^2<br><i>Please remember that you will lose a little water level upon resetting for heat!</i>",
         }
     }
 })
@@ -625,7 +732,8 @@ addLayer("A", {
         return {
             unlocked: true,
             points: new ExpantaNum(0),
-            money: new ExpantaNum(0)
+            money: new ExpantaNum(0),
+            damage: {"house": new ExpantaNum(0),"people": new ExpantaNum(0),"car": new ExpantaNum(0)}
         }
     },
     tabFormat: {
@@ -638,11 +746,14 @@ addLayer("A", {
             ]
         },
         "Money": {
+            unlocked() {return hasUpgrade("A",12) },
             content: [
                 "main-display",
                 ["display-text", function () { return `You have ${format(player.A.money,4)}$<br>Gaining ${format(moneyGain(),4)}$/s.` }],
-                ["upgrades","2"]
-        ]}},
+                ["upgrades",["2"]]
+            ]
+        }
+    },
     upgrades: {
         11: {
             title: "Let us be known",
